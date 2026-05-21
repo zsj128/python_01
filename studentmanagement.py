@@ -367,5 +367,6 @@ def main():
             else:
                 print("❌ 输入无效，请输入0-6的数字！")
 
+
 if __name__ == "__main__":
     main()
