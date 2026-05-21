@@ -170,8 +170,8 @@ class StudentManager:
             self.conn = pymysql.connect(
                 host="localhost",
                 user="root",          # 改为自己的MySQL账号
-                password="Aa@1233211234567",# 改为自己的MySQL密码
-                database="school_db",
+                password="root123456",# 改为自己的MySQL密码
+                database="student_db",
                 charset="utf8mb4",
                 autocommit=False
             )
@@ -302,20 +302,6 @@ class StudentManager:
             self.conn.rollback()
             print("❌ 删除失败")
 
-    def is_users_id(self,users_id):
-        sql="SELECT users_id FROM school_db.users where users_id=%s"
-        self.cursor.execute(sql,users_id)
-        self.conn.commit()
-        res = self.cursor.fetchall()
-        return res
-
-    def is_passwords(self,users_id):
-        sql="SELECT passwords FROM school_db.users where users_id=%s"
-        self.cursor.execute(sql,users_id)
-        self.conn.commit()
-        res = self.cursor.fetchall()
-        return res
-
     # 关闭数据库连接
     def close(self):
         self.cursor.close()
@@ -326,74 +312,59 @@ class StudentManager:
 def main():
     sm = StudentManager()
     while True:
-        user_id=input("请输入用户名（退出输入0）：")
-        if user_id=='0':
+        print("\n======= 学生信息成绩管理系统【双表版】=======")
+        print("1. 添加学生（含成绩录入）")
+        print("2. 查看所有学生完整信息")
+        print("3. 按学号查询学生成绩")
+        print("4. 修改学生基础信息")
+        print("5. 修改学生成绩信息")
+        print("6. 删除学生（含成绩）")
+        print("0. 退出系统")
+        print("==========================================")
+
+        choice = input("请输入功能编号：")
+
+        if choice == "1":
+            sid = input("请输入学生学号：")
+            name = input("请输入学生姓名：")
+            age = input("请输入学生年龄：")
+            major = input("请输入所学专业：")
+            c = input("请输入语文成绩：")
+            m = input("请输入数学成绩：")
+            e = input("请输入英语成绩：")
+            sm.add_student(sid, name, age, major, c, m, e)
+
+        elif choice == "2":
+            sm.show_all_student()
+
+        elif choice == "3":
+            sid = input("请输入查询学号：")
+            sm.search_score_by_id(sid)
+
+        elif choice == "4":
+            sid = input("请输入要修改的学号：")
+            age = input("请输入新年龄：")
+            major = input("请输入新专业：")
+            sm.update_student_info(sid, age, major)
+
+        elif choice == "5":
+            sid = input("请输入要修改成绩的学号：")
+            c = input("请输入新语文成绩：")
+            m = input("请输入新数学成绩：")
+            e = input("请输入新英语成绩：")
+            sm.update_student_score(sid, c, m, e)
+
+        elif choice == "6":
+            sid = input("请输入要删除的学号：")
+            sm.delete_student(sid)
+
+        elif choice == "0":
+            sm.close()
+            print("👋 系统退出成功，再见！")
             break
-        if sm.is_users_id(user_id)==():
-            print('用户不存在')
-            continue
+
         else:
-            passwords=input("请输入密码：")
-            if sm.is_passwords(user_id)!=[{'passwords':passwords}]:
-                print("密码错误")
-                continue
-            else:
-                while True:
-                    print("\n======= 学生信息成绩管理系统【双表版】=======")
-                    print("1. 添加学生（含成绩录入）")
-                    print("2. 查看所有学生完整信息")
-                    print("3. 按学号查询学生成绩")
-                    print("4. 修改学生基础信息")
-                    print("5. 修改学生成绩信息")
-                    print("6. 删除学生（含成绩）")
-                    print("0. 退出系统")
-                    print("==========================================")
-
-                    choice = input("请输入功能编号：")
-
-                    if choice == "1":
-                        sid = input("请输入学生学号：")
-                        name = input("请输入学生姓名：")
-                        age = input("请输入学生年龄：")
-                        major = input("请输入所学专业：")
-                        c = input("请输入语文成绩：")
-                        m = input("请输入数学成绩：")
-                        e = input("请输入英语成绩：")
-                        sm.add_student(sid, name, age, major, c, m, e)
-
-                    elif choice == "2":
-                        sm.show_all_student()
-
-                    elif choice == "3":
-                        sid = input("请输入查询学号：")
-                        sm.search_score_by_id(sid)
-
-                    elif choice == "4":
-                        sid = input("请输入要修改的学号：")
-                        age = input("请输入新年龄：")
-                        major = input("请输入新专业：")
-                        sm.update_student_info(sid, age, major)
-
-                    elif choice == "5":
-                        sid = input("请输入要修改成绩的学号：")
-                        c = input("请输入新语文成绩：")
-                        m = input("请输入新数学成绩：")
-                        e = input("请输入新英语成绩：")
-                        sm.update_student_score(sid, c, m, e)
-
-                    elif choice == "6":
-                        sid = input("请输入要删除的学号：")
-                        sm.delete_student(sid)
-
-                    elif choice == "0":
-                        sm.close()
-                        print("👋 系统退出成功，再见！")
-                        break
-
-                    else:
-                        print("❌ 输入无效，请输入0-6的数字！")
-        break
-        
+            print("❌ 输入无效，请输入0-6的数字！")
 
 if __name__ == "__main__":
     main()
