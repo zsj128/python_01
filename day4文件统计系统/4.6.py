@@ -1,0 +1,8 @@
+print('aabbccddeeeffg'.strip('af'))
+print('aabbccddeeeffg'.strip('gaf'))
+print('aabbccddeeeffg'.strip('agf'))
+print('aabbccddeeeffg'.strip('gaef'))
+print('aabbccddeeeffg'.strip('gbaef'))
+print('aabbccddeeeffg'.strip('gbaefcd'))
+print('aabbccddeeeffg'.lstrip('agf'))
+print('aabbccddeeeffg'.rstrip('gfb'))

@@ -1,0 +1,11 @@
+l1=[1,2,3]
+l2=['a','b','c']
+d=dict(zip(l1,l2))
+print(d)
+print(d.get(4))
+print(d.get(1,4))
+print(list(d.items()))
+print(list(d.keys()))
+print(list(d.values()))
+d.update({1:'g'})
+print(d)

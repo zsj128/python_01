@@ -1,0 +1,6 @@
+{
+"company": "Alibaba",
+"employees": [{"name": "Alice", "position": "Engineer", "salary": 10000},
+              {"name": "Bob", "position": "Manager", "salary": 15000}],
+"location": "Hangzhou"
+}

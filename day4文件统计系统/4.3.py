@@ -1,0 +1,15 @@
+a='a b c d e f g'
+print(a.split(' '))
+print(a.rsplit(' '))
+print(a.partition(' '))
+print(a.rpartition(' '))
+print()
+b="aabcdaf"
+print(b.split('a'))
+print(b.rsplit('a'))
+print(b.split('g'))
+print(b.rsplit('g'))
+print(b.partition('a'))
+print(b.rpartition('a'))
+print(b.partition('u'))
+print(b.rpartition('u'))

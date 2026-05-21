@@ -1,0 +1,10 @@
+a="abbva"
+print(a.find('a'))
+print(a.find('v'))
+print(a.find('g'))
+print(a.rfind('a'))
+print(a.index('v'))
+print(a.index('a'))
+print(a.rindex('a'))
+print(a.count('a'))
+print(a.index('g'))
