@@ -149,24 +149,30 @@ class BookManager:
         
 
     def is_users_id(self,users_id):
-        sql="SELECT users_id FROM school_db.users where users_id=%s"
+        sql="SELECT admin_id FROM admin where admin_id=%s"
         self.cursor.execute(sql,users_id)
         self.conn.commit()
         res = self.cursor.fetchall()
         return res
 
     def is_passwords(self,users_id,passwords):
-        sql="SELECT passwords FROM school_db.users where users_id=%s"
+        sql="SELECT passwords FROM admin where admin_id=%s"
         self.cursor.execute(sql,users_id)
         self.conn.commit()
         res = self.cursor.fetchall()
         if res==[{'passwords':passwords}]:
-            print("✅ 登入成功")
             self.write_log(f"用户{users_id}已登入")
             return True
         else:
             print("❌ 密码错误")
             return False
+        
+    def change_password(self,new_passwords,user_id):
+        sql="UPDATE admin SET passwords=%s WHERE admin_id=%s"
+        self.cursor.execute(sql, (new_passwords, user_id))
+        self.conn.commit()
+        print("✅ 修改密码成功")
+
 
     # 关闭数据库连接
     def close(self):
@@ -181,14 +187,23 @@ def main():
         user_id=input("请输入管理员用户名（退出输入0）：")
         if user_id=='0':
             break
-        if sm.is_users_id(user_id)==():
+        elif sm.is_users_id(user_id)==():
             print('管理员用户不存在')
             continue
         else:
-            passwords=input("请输入密码：")
+            action=input("是否修改密码y/n：")
+            if action=='y':
+                passwords=input("请输入旧密码：")
+                if not sm.is_passwords(user_id,passwords):
+                    continue
+                else:
+                    new_password=input("请输入新密码：")
+                    sm.change_password(new_password,user_id)
+            passwords=input("请输入登入密码：")
             if not sm.is_passwords(user_id,passwords):
                 continue
             else:
+                print("✅ 登入成功")
                 while True:
                     print("\n======= 图书信息管理系统 =======")
                     print("1. 添加图书信息")
