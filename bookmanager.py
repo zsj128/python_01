@@ -16,7 +16,7 @@ class BookManager:
             self.cursor = self.conn.cursor(pymysql.cursors.DictCursor)
             print("✅ 数据库连接成功")
         except Exception as e:
-            print("❌ 数据库连接失败：", e)
+            print("❌ 数据库连接失败：")
 
     # 日志记录工具
     def write_log(self, msg):
@@ -33,7 +33,7 @@ class BookManager:
             self.write_log(f"用户{user_id}新增图书：图书编号{book_id}，书名{book_name}，作者{author}，分类{sort}")
         except Exception as e:
             self.conn.rollback()
-            print(f"❌ 添加失败！图书编号重复或数据格式错误{e}")
+            print(f"❌ 添加失败！图书编号重复或数据格式错误")
 
     def show_all_book(self):
         sql = """
