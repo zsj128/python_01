@@ -24,16 +24,16 @@ class BookManager:
         with open("book_log.txt", "a", encoding="utf-8") as f:
             f.write(f"[{now}] {msg}\n")
 
-    def add_book(self, book_id, book_name, author, sort,user_id):
+    def add_book(self, book_name, author, sort,user_id):
         try:
-            sql = "INSERT INTO book(book_id, book_name, author, sort) VALUES(%s,%s,%s,%s)"
-            self.cursor.execute(sql, (book_id, book_name, author, sort))
+            sql = "INSERT INTO book(book_name, author, sort) VALUES(%s,%s,%s)"
+            self.cursor.execute(sql, (book_name, author, sort))
             self.conn.commit()
             print("✅ 图书信息添加成功")
-            self.write_log(f"用户{user_id}新增图书：图书编号{book_id}，书名{book_name}，作者{author}，分类{sort}")
+            self.write_log(f"用户{user_id}新增图书：书名{book_name}，作者{author}，分类{sort}")
         except Exception as e:
             self.conn.rollback()
-            print(f"❌ 添加失败！图书编号重复或数据格式错误")
+            print(f"❌ 添加失败！图书编号重复或数据格式错误{e}")
 
     def show_all_book(self):
         sql = """
@@ -68,7 +68,7 @@ class BookManager:
             print(f"作者：{res['author']}")
             print(f"分类：{res['sort']}")
             print(f"状态：{res['state']}")
-            print()
+            
             self.write_log(f"用户{user_id}查询图书信息：图书编号{book_id}")
         else:
             print("❌ 未查询到该图书信息！")
@@ -89,7 +89,7 @@ class BookManager:
                 print(f"作者：{i['author']}")
                 print(f"分类：{i['sort']}")
                 print(f"状态：{i['state']}")
-                print()
+                
             self.write_log(f"用户{user_id}查询图书信息：图书名称为{book_name}")
         else:
             print("❌ 未查询到该图书信息！")
@@ -110,7 +110,7 @@ class BookManager:
                 print(f"作者：{i['author']}")
                 print(f"分类：{i['sort']}")
                 print(f"状态：{i['state']}")
-                print()
+                
             self.write_log(f"用户{user_id}查询图书信息：图书分类为{sort}")
         else:
             print("❌ 未查询到该图书信息！")
@@ -131,7 +131,7 @@ class BookManager:
                 print(f"作者：{i['author']}")
                 print(f"分类：{i['sort']}")
                 print(f"状态：{i['state']}")
-                print()
+                
             self.write_log(f"用户{user_id}查询图书信息：图书作者为{author}")
         else:
             print("❌ 未查询到该图书信息！")
@@ -153,8 +153,10 @@ class BookManager:
             self.conn.rollback()
             print(f"❌ 修改失败{e}")
 
-    def delete_book(self, book_id,user_id):
+    def delete_book(self, book_id, user_id):
         try:
+            sql = "DELETE FROM borrower WHERE book_id=%s"
+            self.cursor.execute(sql, book_id)
             sql = "DELETE FROM book WHERE book_id=%s"
             self.cursor.execute(sql, book_id)
             self.conn.commit()
@@ -164,9 +166,9 @@ class BookManager:
                 self.write_log(f"用户{user_id}删除图书信息：图书编号{book_id}")
             else:
                 print("❌ 未找到该图书")
-        except:
+        except Exception as e:
             self.conn.rollback()
-            print("❌ 删除失败")
+            print(f"❌ 删除失败：{e}")
 
     def borrow_book(self,book_name,user_id):
         sql = """
@@ -176,18 +178,32 @@ class BookManager:
         """
         self.cursor.execute(sql, book_name)
         res = self.cursor.fetchone()
-
-        if res:
-            if res['state']=='可借阅':
-                sql = "UPDATE book SET state='已借阅' WHERE book_name=%s"
-                self.cursor.execute(sql,book_name)
-                self.conn.commit()
-                print("✅ 图书借阅成功")
-                self.write_log(f"{book_name}图书已被用户{user_id}借阅：图书编号{res['book_id']}")
+        if self.borrow_user(user_id)<3:
+            if res:
+                if res['state']=='可借阅':
+                    sql = "UPDATE book SET state='已借阅' WHERE book_name=%s"
+                    self.cursor.execute(sql,book_name)
+                    print("✅ 图书借阅成功")
+                    sql="INSERT INTO borrower (borrower, book_name, book_id) VALUES (%s,%s,%s)"
+                    self.cursor.execute(sql, (user_id, res['book_name'],res['book_id']))
+                    self.conn.commit()
+                    self.write_log(f"{book_name}图书已被用户{user_id}借阅：图书编号{res['book_id']}")
+                else:
+                    print("❌ 该图书已被借阅！")
             else:
-                print("❌ 该图书已被借阅！")
+                print("❌ 未查询到该图书信息！")
         else:
-            print("❌ 未查询到该图书信息！")
+            print("❌ 已达到用户书籍借阅上限！")
+
+    def borrow_user(self,user_id):
+        sql = """
+        SELECT s.borrow_id, s.borrower, s.book_id, s.book_name, s.borrow_day, s.return_day
+        FROM borrower s
+        WHERE s.borrower = %s
+        """
+        self.cursor.execute(sql, user_id)
+        res=self.cursor.fetchall()
+        return len(res)
 
     def return_book(self,book_name,user_id):
         sql = """
@@ -204,11 +220,30 @@ class BookManager:
                 self.cursor.execute(sql,book_name)
                 self.conn.commit()
                 print("✅ 图书归还成功")
+                sql = "DELETE FROM borrower WHERE book_id=%s and borrower=%s"
+                self.cursor.execute(sql, (res["book_id"], user_id))
+                self.conn.commit()
                 self.write_log(f"用户{user_id}将{book_name}图书已归还：图书编号{res['book_id']}")
             except:
                 print("❌ 图书归还失败")
         else:
             print("❌ 未查询到该图书信息！")
+
+    def show_borrower(self,user_id):
+        sql = """
+        SELECT s.borrow_id, s.borrower, s.book_id,s.book_name, s.borrow_day, s.return_day
+        FROM borrower s
+        WHERE s.borrower = %s
+        """
+        self.cursor.execute(sql, user_id)
+        res = self.cursor.fetchall()
+        if res:
+            print("\n========== 图书借阅详情 ==========")
+            for i in res:
+                print(f"借阅操作编号：{i['borrow_id']},借阅人：{i['borrower']},借阅书籍编号：{i['book_id']},借阅书籍名称：{i['book_name']},借阅日期：{i['borrow_day']},归还日期：{i['return_day']}")
+            self.write_log(f"用户{user_id}查询借阅信息")
+        else:
+            print("❌ 未查询到该图书信息！")   
         
     def create_user(self,user_name,passwords):
         sql = """
@@ -313,7 +348,8 @@ def main():
                         print("7. 修改图书信息（仅管理员）")
                         print("8. 借阅图书")
                         print("9. 归还图书")
-                        print("10. 删除图书信息（仅管理员）")
+                        print("10. 已借阅书籍的信息")
+                        print("11. 删除图书信息（仅管理员）")
                         print("0. 退出系统")
                         print("==========================================")
 
@@ -321,11 +357,10 @@ def main():
 
                         if choice == "1":
                             if is_admin_answer=='是':
-                                book_id = input("请输入图书编号：")
                                 book_name = input("请输入书名：")
                                 author = input("请输入作者姓名：")
                                 sort = input("请输入图书分类：")
-                                sm.add_book(book_id,book_name,author,sort,user_id)
+                                sm.add_book(book_name,author,sort,user_id)
                             else:
                                 print("❌ 无权限操作")
 
@@ -368,6 +403,9 @@ def main():
                             sm.return_book(book_name,user_id)
 
                         elif choice == "10":
+                            sm.show_borrower(user_id)
+
+                        elif choice == "11":
                             if is_admin_answer=='是':
                                 book_id = input("请输入要删除的图书id：")
                                 action=input("确认是否删除该图书信息y/n：")
